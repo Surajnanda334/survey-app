@@ -1,12 +1,16 @@
 const express = require('express')
 const userSchema = require('../models/userModel')
+const bcrypt = require('bcryptjs')
 
 const signUp = async (req, res) => {
     const { name, email, password } = req.body;
+    let hash = bcrypt.genSaltSync(10)
+    console.log("Hash:",hash)
+    let hashedPassword = bcrypt.hashSync(password,hash)
     const user = new userSchema({
         name,
         email,
-        password
+        password:hashedPassword
     })
     let userData = await user.save()
     console.log(userData)
@@ -21,7 +25,7 @@ const login = async (req, res) => {
     const { email, password } = req.body;
     let userData = await userSchema.findOne({email});
     if(userData){
-        if(userData.password === password){
+        if(bcrypt.compareSync(password,userData.password)){
             res.status(200).json({
                 status: true,
                 message: "user logged in successfully",
